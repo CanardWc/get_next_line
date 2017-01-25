@@ -5,86 +5,72 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: fgrea <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2016/11/21 05:42:42 by fgrea             #+#    #+#             */
-/*   Updated: 2016/12/11 20:01:43 by fgrea            ###   ########.fr       */
+/*   Created: 2017/01/25 06:18:10 by fgrea             #+#    #+#             */
+/*   Updated: 2017/01/25 19:22:56 by fgrea            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "get_next_line.h"
-#include <fcntl.h>
 
-static int		get_next_line_check(char *line, int ret)
+static t_gnl	*get_next_line_fd_gestion(const int fd, t_gnl **file)
 {
-	size_t	i;
+	t_gnl		*fileread;
 
-	i = 0;
-	ft_putendl("LOLcheck");
-	if (line == NULL && ret > 0)
-		return (1);
-	if (line == NULL)
-		return (0);
-	while (line != NULL && line[i] && line[i] != '\n')
-		i++;
-	ft_putnbr(i);
-	ft_putendl("LOLcheck");
-	if (line[i] == '\n' || ret == 0)
-		return (0);
-	else
-		return (1);
-}
-
-static char		*get_next_line_result(char *line, char **save)
-{
-	char	**array;
-	char	*tmp;
-	size_t	i;
-	size_t	s;
-
-	i = 0;
-	s = 0;
-	tmp = NULL;
-	array = ft_strsplit(line, '\n');
-	if (array != NULL)
-		line = array[i];
-	ft_putendl("lol");
-	i = 1;
-	while (array != NULL && array[i])
+	fileread = *file;
+	while (fileread)
 	{
-		tmp = ft_strjoin(*save, array[i]);
-		ft_strdel(save);
-		*save = ft_strjoin(tmp, NULL);
-		ft_strdel(&tmp);
-		i++;
+		if (fileread->fd == fd)
+			return (fileread);
+		fileread = fileread->next;
 	}
-	return (line);
+	if (!(fileread = (t_gnl *)malloc(sizeof(t_gnl))))
+		return (NULL);
+	fileread->fd = fd;
+	if (!(fileread->buff = ft_strnew(BUFF_SIZE)))
+		return (NULL);
+	fileread->next = *file;
+	*file = fileread;
+	return (*file);
 }
 
-int			get_next_line(const int fd, char **line)
+static ssize_t	get_next_line_finder(t_gnl *filetoread)
 {
-	static char		*save = NULL;
-	char			*tmp;
-	char			*tmp2;
-	int				ret;
+	ssize_t		ret;
+	char		*tmp;
+	char		buffer[BUFF_SIZE + 1];
 
 	ret = 1;
-	tmp = NULL;
-	tmp2 = NULL;
-	*line = *line = ft_strjoin(save, NULL);
-	ft_strdel(&save);
-	while (get_next_line_check(*line, ret) == 1)
+	while (ret > 0 && !ft_strchr(filetoread->buff, '\n'))
 	{
-		tmp = ft_strnew(BUFF_SIZE);
-		if (*line != NULL)
-			tmp2 = ft_strjoin(*line, NULL);
-		ft_strdel(line);
-		if ((ret = read(fd, tmp, BUFF_SIZE)) == -1)
+		if ((ret = read(filetoread->fd, &buffer, BUFF_SIZE)) == -1)
 			return (-1);
-		*line = ft_strjoin(tmp2, tmp);
-		tmp2 = ft_strjoin(*line, NULL);
-		ft_strdel(&tmp2);
-		ft_strdel(&tmp);
+		buffer[ret] = '\0';
+		tmp = filetoread->buff;
+		filetoread->buff = ft_strjoin(filetoread->buff, buffer);
+		free(tmp);
+		ft_memset(buffer, '\0', ret);
 	}
-	*line = get_next_line_result(*line, &save);
-	ft_putnbr(ret);
-	return (ret == 0 ? 0 : 1);
+	return (ret);
+}
+
+int				get_next_line(const int fd, char **line)
+{
+	static t_gnl	*file;
+	char			*tmp;
+	ssize_t			ret;
+
+	if (fd < 0 || !line)
+		return (-1);
+	if ((file = get_next_line_fd_gestion(fd, &file)) == NULL)
+		return (-1);
+	if ((ret = get_next_line_finder(file)) == -1)
+		return (-1);
+	*line = ft_strsub(file->buff, 0, ft_strnlen(file->buff, '\n'));
+	tmp = file->buff;
+	file->buff = ft_strsub(tmp, (ft_strnlen(tmp, '\n') + 1), \
+				ft_strlen(ft_strchr(tmp, '\n')));
+	free(tmp);
+	if (!**line && !ret)
+		return (0);
+	return (1);
 }

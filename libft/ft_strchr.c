@@ -6,7 +6,7 @@
 /*   By: fgrea <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2016/11/10 15:45:03 by fgrea             #+#    #+#             */
-/*   Updated: 2016/11/18 18:32:01 by fgrea            ###   ########.fr       */
+/*   Updated: 2017/01/25 14:11:47 by fgrea            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,16 +14,13 @@
 
 char	*ft_strchr(const char *s, int c)
 {
-	char	ca;
-
-	ca = (char)c;
 	while (*s)
 	{
-		if (*s == ca)
+		if (*s == (char)c)
 			return ((char *)s);
 		s++;
-		if (*s == ca)
-			return ((char *)s);
 	}
-	return (NULL);
+	if ((char)c == '\0')
+		return ((char *)s);
+	return (0);
 }

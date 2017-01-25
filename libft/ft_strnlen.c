@@ -6,18 +6,20 @@
 /*   By: fgrea <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2016/11/17 07:56:10 by fgrea             #+#    #+#             */
-/*   Updated: 2016/11/17 10:12:55 by fgrea            ###   ########.fr       */
+/*   Updated: 2017/01/25 10:35:42 by fgrea            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "libft.h"
 
-size_t		ft_strnlen(char *s, size_t len)
+size_t		ft_strnlen(char *s, int c)
 {
 	size_t		i;
+	char		ca;
 
 	i = 0;
-	while (s[i] && i < len)
+	ca = (char)c;
+	while (s[i] != '\0' && s[i] != ca)
 		i++;
 	return (i);
 }

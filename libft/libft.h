@@ -6,7 +6,7 @@
 /*   By: fgrea <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2016/11/16 18:40:03 by fgrea             #+#    #+#             */
-/*   Updated: 2016/11/23 22:31:13 by fgrea            ###   ########.fr       */
+/*   Updated: 2017/01/25 09:24:43 by fgrea            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -84,7 +84,7 @@ void				ft_lstadd(t_list **alst, t_list *new);
 t_list				*ft_lstmap(t_list *lst, t_list *(*f)(t_list *elem));
 void				ft_lstiter(t_list *lst, void (*f)(t_list *elem));
 int					ft_strncmp(const char *s1, const char *s2, size_t n);
-size_t				ft_strnlen(char *str, size_t len);
+size_t				ft_strnlen(char *str, int c);
 void				ft_printanswer(void);
 void				ft_printquestion(void);
 int					ft_sqrt(int nb);
