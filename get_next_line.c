@@ -5,72 +5,101 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: fgrea <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2017/01/25 06:18:10 by fgrea             #+#    #+#             */
-/*   Updated: 2017/01/25 19:22:56 by fgrea            ###   ########.fr       */
+/*   Created: 2020/12/04 17:06:30 by fgrea             #+#    #+#             */
+/*   Updated: 2021/01/05 19:31:04 by fgrea            ###   ########lyon.fr   */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "get_next_line.h"
 
-static t_gnl	*get_next_line_fd_gestion(const int fd, t_gnl **file)
+char	*ft_strjoin(const char *s1, const char *s2)
 {
-	t_gnl		*fileread;
+	char	*dst;
+	char	*ret;
 
-	fileread = *file;
-	while (fileread)
-	{
-		if (fileread->fd == fd)
-			return (fileread);
-		fileread = fileread->next;
-	}
-	if (!(fileread = (t_gnl *)malloc(sizeof(t_gnl))))
+	if (!(dst = (char *)malloc((ft_strlen(s1) + \
+						ft_strlen(s2) + 1) * sizeof(char))))
 		return (NULL);
-	fileread->fd = fd;
-	if (!(fileread->buff = ft_strnew(BUFF_SIZE)))
-		return (NULL);
-	fileread->next = *file;
-	*file = fileread;
-	return (*file);
-}
-
-static ssize_t	get_next_line_finder(t_gnl *filetoread)
-{
-	ssize_t		ret;
-	char		*tmp;
-	char		buffer[BUFF_SIZE + 1];
-
-	ret = 1;
-	while (ret > 0 && !ft_strchr(filetoread->buff, '\n'))
-	{
-		if ((ret = read(filetoread->fd, &buffer, BUFF_SIZE)) == -1)
-			return (-1);
-		buffer[ret] = '\0';
-		tmp = filetoread->buff;
-		filetoread->buff = ft_strjoin(filetoread->buff, buffer);
-		free(tmp);
-		ft_memset(buffer, '\0', ret);
-	}
+	ret = dst;
+	dst = ft_memcpy(dst, s1, ft_strlen(s1));
+	dst += ft_strlen(s1);
+	dst = ft_memcpy(dst, s2, ft_strlen(s2));
+	dst += ft_strlen(s2);
+	*dst = '\0';
 	return (ret);
 }
 
-int				get_next_line(const int fd, char **line)
+char	*ft_strdup(const char *s1)
 {
-	static t_gnl	*file;
-	char			*tmp;
-	ssize_t			ret;
+	char	*ret;
 
-	if (fd < 0 || !line)
-		return (-1);
-	if ((file = get_next_line_fd_gestion(fd, &file)) == NULL)
-		return (-1);
-	if ((ret = get_next_line_finder(file)) == -1)
-		return (-1);
-	*line = ft_strsub(file->buff, 0, ft_strnlen(file->buff, '\n'));
-	tmp = file->buff;
-	file->buff = ft_strsub(tmp, (ft_strnlen(tmp, '\n') + 1), \
-				ft_strlen(ft_strchr(tmp, '\n')));
-	free(tmp);
-	if (!**line && !ret)
-		return (0);
-	return (1);
+	if (!(ret = (char *)malloc((ft_strlen(s1) + 1) * sizeof(char))))
+		return (NULL);
+	*(ret + ft_strlen(s1)) = 0;
+	return (ft_memcpy(ret, s1, ft_strlen(s1)));
 }
+
+void	*ft_memchr(const void *s, int c, size_t n)
+{
+	if (n == 0)
+		return (NULL);
+	while (--n > 0 && *(unsigned char *)s != (unsigned char)c)
+		s++;
+	return ((n == 0 && *(unsigned char *)s != (unsigned char)c) ? \
+			NULL : (void *)s);
+}
+
+void	*ft_memcpy(void *dst, const void *src, size_t n)
+{
+	void	*ret;
+
+	if (!src && !dst)
+		return (NULL);
+	ret = dst;
+	while (n-- > 0)
+		*(unsigned char *)dst++ = *(unsigned char *)src++;
+	return (ret);
+}
+
+int		get_next_line(int fd, char **line)
+{
+	static char	*r[4096];
+	char		buf[BUFF_SIZE];
+	ssize_t		read_ret;
+	char		*tmp;
+	char		*eol;
+
+	read_ret = 1;
+	while(read_ret > 0 && !(eol = ft_memchr(r[fd], '\n', ft_strlen(r[fd]))))
+	{
+		read_ret = read(fd, buf, BUFF_SIZE);
+		tmp = ft_strjoin(r[fd], buf);
+		free(r[fd]);
+		r[fd] = tmp;
+	}
+	if (read_ret == -1 || !r[fd])
+		return (-1);	
+	*line = ft_substr(r[fd], 0, eol - r[fd] + 1);
+	tmp = ft_substr(r[fd], eol - r[fd] + 1, ft_strlen(r[fd]) - (eol - r[fd]));
+	free(r[fd]);
+	r[fd] = tmp;
+	return (read_ret == 0 ? 0 : 1);
+}
+/*
+#include <fcntl.h>
+
+
+int		main(void)
+{
+	char	*line;
+	int		fd;
+
+	fd = open("lol.txt", O_RDONLY);
+	while (get_next_line(fd, &line) > 0)
+	{
+		write(1, line, ft_strlen(line));
+		free(line);
+	}
+	close(fd);
+	return (0);
+}*/

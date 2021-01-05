@@ -5,26 +5,28 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: fgrea <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2016/11/21 05:40:20 by fgrea             #+#    #+#             */
-/*   Updated: 2017/01/25 18:45:33 by fgrea            ###   ########.fr       */
+/*   Created: 2020/12/04 16:58:05 by fgrea             #+#    #+#             */
+/*   Updated: 2021/01/05 19:32:41 by fgrea            ###   ########lyon.fr   */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef GET_NEXT_LINE_H
 # define GET_NEXT_LINE_H
 
-# define BUFF_SIZE 90
+# ifndef BUFF_SIZE
+#  define BUFF_SIZE 30
+# endif
 
-# include <fcntl.h>
-# include "libft/libft.h"
+# include <unistd.h>
+# include <stdlib.h>
 
-typedef struct		s_gnl
-{
-	int				fd;
-	char			*buff;
-	struct s_gnl	*next;
-}					t_gnl;
-
-int					get_next_line(const int fd, char **line);
+int		get_next_line(int fd, char **line);
+void	*ft_memchr(const void *s, int c, size_t n);
+void	*ft_memcpy(void *dst, const void *src, size_t n);
+void	*ft_realloc(void *ptr, size_t size);
+char	*ft_strdup(const char *s1);
+size_t	ft_strlen(const char *s);
+char	*ft_strmerge(int c, char *s1, char *s2);
+char	*ft_substr(const char *s, unsigned int start, size_t len);
 
 #endif
