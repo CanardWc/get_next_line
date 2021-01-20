@@ -29,16 +29,6 @@ char	*ft_strjoin(const char *s1, const char *s2)
 	return (ret);
 }
 
-char	*ft_strdup(const char *s1)
-{
-	char	*ret;
-
-	if (!(ret = (char *)malloc((ft_strlen(s1) + 1) * sizeof(char))))
-		return (NULL);
-	*(ret + ft_strlen(s1)) = 0;
-	return (ft_memcpy(ret, s1, ft_strlen(s1)));
-}
-
 void	*ft_memchr(const void *s, int c, size_t n)
 {
 	if (n == 0)
@@ -63,43 +53,28 @@ void	*ft_memcpy(void *dst, const void *src, size_t n)
 
 int		get_next_line(int fd, char **line)
 {
-	static char	*r[4096];
-	char		buf[BUFF_SIZE];
+	static char	*r;
+	char		buf[BUFFER_SIZE + 1];
 	ssize_t		read_ret;
 	char		*tmp;
 	char		*eol;
 
-	read_ret = 1;
-	while(read_ret > 0 && !(eol = ft_memchr(r[fd], '\n', ft_strlen(r[fd]))))
+	read_ret = -1;
+	if (fd < 0 || BUFFER_SIZE <= 0 || !line)
+		return (-1);
+	while(read_ret != 0 && !(eol = ft_memchr(r, '\n', ft_strlen(r))))
 	{
-		read_ret = read(fd, buf, BUFF_SIZE);
-		tmp = ft_strjoin(r[fd], buf);
-		free(r[fd]);
-		r[fd] = tmp;
+		read_ret = read(fd, buf, BUFFER_SIZE);
+		buf[read_ret] = 0;
+		tmp = ft_strjoin(r, buf);
+		free(r);
+		r = tmp;
+		if (read_ret == -1 || !r)
+			return (-1);
 	}
-	if (read_ret == -1 || !r[fd])
-		return (-1);	
-	*line = ft_substr(r[fd], 0, eol - r[fd] + 1);
-	tmp = ft_substr(r[fd], eol - r[fd] + 1, ft_strlen(r[fd]) - (eol - r[fd]));
-	free(r[fd]);
-	r[fd] = tmp;
+	*line = ft_substr(r, 0, eol ? eol - r : ft_strlen(r));
+	tmp = ft_substr(r, (eol - r) + 1, ft_strlen(r) - (eol - r));
+	free(r);
+	r = tmp;
 	return (read_ret == 0 ? 0 : 1);
 }
-/*
-#include <fcntl.h>
-
-
-int		main(void)
-{
-	char	*line;
-	int		fd;
-
-	fd = open("lol.txt", O_RDONLY);
-	while (get_next_line(fd, &line) > 0)
-	{
-		write(1, line, ft_strlen(line));
-		free(line);
-	}
-	close(fd);
-	return (0);
-}*/
