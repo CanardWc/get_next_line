@@ -5,8 +5,8 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: fgrea <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2020/12/04 17:06:30 by fgrea             #+#    #+#             */
-/*   Updated: 2021/01/05 19:31:04 by fgrea            ###   ########lyon.fr   */
+/*   Created: 2021/01/20 15:52:08 by fgrea             #+#    #+#             */
+/*   Updated: 2021/04/20 17:23:50 by fgrea            ###   ########lyon.fr   */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,8 +17,8 @@ char	*ft_strjoin(const char *s1, const char *s2)
 	char	*dst;
 	char	*ret;
 
-	if (!(dst = (char *)malloc((ft_strlen(s1) + \
-						ft_strlen(s2) + 1) * sizeof(char))))
+	dst = (char *)malloc((ft_strlen(s1) + ft_strlen(s2) + 1) * sizeof(char));
+	if (!dst)
 		return (NULL);
 	ret = dst;
 	dst = ft_memcpy(dst, s1, ft_strlen(s1));
@@ -35,8 +35,10 @@ void	*ft_memchr(const void *s, int c, size_t n)
 		return (NULL);
 	while (--n > 0 && *(unsigned char *)s != (unsigned char)c)
 		s++;
-	return ((n == 0 && *(unsigned char *)s != (unsigned char)c) ? \
-			NULL : (void *)s);
+	if (n == 0 && *(unsigned char *)s != (unsigned char)c)
+		return (NULL);
+	else
+		return ((void *)s);
 }
 
 void	*ft_memcpy(void *dst, const void *src, size_t n)
@@ -51,30 +53,73 @@ void	*ft_memcpy(void *dst, const void *src, size_t n)
 	return (ret);
 }
 
-int		get_next_line(int fd, char **line)
+int	la_norme_cette_sale_grande_tante(int fd, char **r, char **eol)
+{
+	char		buf[BUFFER_SIZE + 1];
+	ssize_t		read_ret;
+	char		*tmp;
+
+	read_ret = -2;
+	*eol = ft_memchr(*r, '\n', ft_strlen(*r));
+	while (read_ret != 0 && !*eol)
+	{
+		read_ret = read(fd, buf, BUFFER_SIZE);
+		if (read_ret < 0)
+			return (-1);
+		buf[read_ret] = 0;
+		tmp = ft_strjoin(*r, buf);
+		free(*r);
+		*r = tmp;
+		if (read_ret == -1 || !*r)
+			return (-1);
+		*eol = ft_memchr(*r, '\n', ft_strlen(*r));
+	}
+	return (read_ret);
+}
+
+#include <stdio.h>
+
+int	get_next_line(int fd, char **line)
 {
 	static char	*r;
-	char		buf[BUFFER_SIZE + 1];
 	ssize_t		read_ret;
 	char		*tmp;
 	char		*eol;
 
-	read_ret = -1;
+	tmp = NULL;
 	if (fd < 0 || BUFFER_SIZE <= 0 || !line)
 		return (-1);
-	while(read_ret != 0 && !(eol = ft_memchr(r, '\n', ft_strlen(r))))
-	{
-		read_ret = read(fd, buf, BUFFER_SIZE);
-		buf[read_ret] = 0;
-		tmp = ft_strjoin(r, buf);
-		free(r);
-		r = tmp;
-		if (read_ret == -1 || !r)
-			return (-1);
-	}
-	*line = ft_substr(r, 0, eol ? eol - r : ft_strlen(r));
+	read_ret = la_norme_cette_sale_grande_tante(fd, &r, &eol);
+	if (read_ret == -1)
+		return (-1);
+	if (eol)
+		*line = ft_substr(r, 0, eol - r);
+	else
+		*line = ft_substr(r, 0, ft_strlen(r));
 	tmp = ft_substr(r, (eol - r) + 1, ft_strlen(r) - (eol - r));
 	free(r);
 	r = tmp;
-	return (read_ret == 0 ? 0 : 1);
+	if (read_ret == 0)
+		return (0);
+	else
+		return (1);
+}
+
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
+int	main(int ac, char **av)
+{
+	char	*line =0;
+	int	fd;
+
+	fd = open(av[1], O_RDONLY);
+	while (get_next_line(fd, &line) > 0)
+	{
+		printf("|%s\n", line);
+	}
+	printf("|%s\n", line);
+	while (1);
+	return (0);
 }
